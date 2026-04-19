@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { playTick, playTimeUp, unlockAudio } from './audio'
+import { playTick, playTimeUp, primeAudioFromUserGesture, unlockAudio } from './audio'
 import './App.css'
 
 const STAGES = [
@@ -71,17 +71,22 @@ export default function App() {
       return
     }
     if (secondsLeft < prev && secondsLeft > 0 && secondsLeft <= URGENT_THRESHOLD) {
-      void unlockAudio()
-      playTick()
+      void (async () => {
+        await unlockAudio()
+        playTick()
+      })()
     }
     if (secondsLeft === 0 && prev === 1) {
-      void unlockAudio()
-      playTimeUp()
+      void (async () => {
+        await unlockAudio()
+        playTimeUp()
+      })()
     }
     prevSeconds.current = secondsLeft
   }, [isBarter, paused, secondsLeft])
 
   const startGame = useCallback(async () => {
+    primeAudioFromUserGesture()
     await unlockAudio()
     setDay(1)
     setStageIndex(0)
@@ -91,6 +96,7 @@ export default function App() {
   }, [])
 
   const nextStage = useCallback(async () => {
+    primeAudioFromUserGesture()
     await unlockAudio()
     if (stageIndex === 0) {
       setStageIndex(1)
@@ -124,6 +130,7 @@ export default function App() {
   }, [])
 
   const togglePause = useCallback(() => {
+    primeAudioFromUserGesture()
     void unlockAudio()
     setPaused((p) => !p)
   }, [])
