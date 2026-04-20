@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { playTick, playTimeUp, primeAudioFromUserGesture, unlockAudio } from './audio'
 import './App.css'
 
@@ -11,23 +11,42 @@ const STAGES = [
 const BUY_SECONDS = 60
 const URGENT_THRESHOLD = 10
 
-const STAGE_GLYPHS: { emoji: string; label: string }[] = [
-  { emoji: '🗺️', label: 'Money and move' },
-  { emoji: '🤝', label: 'Buy and barter' },
-  { emoji: '🍳', label: 'Cook and counter' },
+const STAGE_THEME = [
+  { bar: '#8ebc2f', circle: '#67703d', utensil: 'fork' as const, badge: false },
+  { bar: '#5eb0cf', circle: '#446a9d', utensil: 'fork' as const, badge: true },
+  { bar: '#9a7918', circle: '#5d3f28', utensil: 'spoon' as const, badge: false },
 ]
 
-function StageGlyph({ stageId, active }: { stageId: number; active: boolean }) {
-  const g = STAGE_GLYPHS[stageId]
+function StageTab({
+  stageId,
+  label,
+  active,
+}: {
+  stageId: number
+  label: string
+  active: boolean
+}) {
+  const t = STAGE_THEME[stageId]
+  const stageNo = stageId + 1
   return (
-    <span
-      className={`stage-tab__glyph${active ? ' stage-tab__glyph--active' : ''}`}
+    <div
+      className={`stage-tab stage-tab--style-${stageId}${active ? ' stage-tab--active' : ''}`}
       data-stage={stageId}
-      title={g.label}
-      aria-hidden="true"
+      aria-current={active ? 'step' : undefined}
+      style={
+        {
+          '--stage-bar': t.bar,
+          '--stage-circle': t.circle,
+        } as CSSProperties
+      }
     >
-      <span className="stage-tab__glyph-emoji">{g.emoji}</span>
-    </span>
+      <span className="stage-tab__disc" aria-hidden="true" />
+      <span className="stage-tab__bar">
+        <span className="stage-tab__text">{`${stageNo}-${label}`}</span>
+      </span>
+      <span className={`stage-tab__utensil stage-tab__utensil--${t.utensil}`} aria-hidden="true" />
+      {t.badge ? <span className="stage-tab__timer-badge" aria-hidden="true">⏱</span> : null}
+    </div>
   )
 }
 
@@ -219,14 +238,7 @@ export default function App() {
             {STAGES.map((s, i) => {
               const active = i === stageIndex
               return (
-                <div
-                  key={s.id}
-                  className={`stage-tab${active ? ' stage-tab--active' : ''}`}
-                  aria-current={active ? 'step' : undefined}
-                >
-                  <StageGlyph stageId={i} active={active} />
-                  <span className="stage-tab__label">{s.footer}</span>
-                </div>
+                <StageTab key={s.id} stageId={i} label={s.short} active={active} />
               )
             })}
           </div>
