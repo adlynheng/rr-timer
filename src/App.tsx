@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { playTick, playTimeUp, unlockAudio } from './audio'
+import { playTick, playTimeUp, primeAudioFromUserGesture, unlockAudio } from './audio'
 import './App.css'
 
 const STAGES = [
@@ -11,23 +11,28 @@ const STAGES = [
 const BUY_SECONDS = 60
 const URGENT_THRESHOLD = 10
 
-const STAGE_GLYPHS: { emoji: string; label: string }[] = [
-  { emoji: '🗺️', label: 'Money and move' },
-  { emoji: '🤝', label: 'Buy and barter' },
-  { emoji: '🍳', label: 'Cook and counter' },
+const STAGE_TAB_IMAGES = [
+  { src: '/1-money-and-move.png', alt: 'Stage 1 - Money and move' },
+  { src: '/2-buy-and-barter.png', alt: 'Stage 2 - Buy and barter' },
+  { src: '/3-cook-and-counter.png', alt: 'Stage 3 - Cook and counter' },
 ]
 
-function StageGlyph({ stageId, active }: { stageId: number; active: boolean }) {
-  const g = STAGE_GLYPHS[stageId]
+function StageTab({
+  stageId,
+  active,
+}: {
+  stageId: number
+  active: boolean
+}) {
+  const image = STAGE_TAB_IMAGES[stageId]
   return (
-    <span
-      className={`stage-tab__glyph${active ? ' stage-tab__glyph--active' : ''}`}
+    <div
+      className={`stage-tab stage-tab--style-${stageId}${active ? ' stage-tab--active' : ''}`}
       data-stage={stageId}
-      title={g.label}
-      aria-hidden="true"
+      aria-current={active ? 'step' : undefined}
     >
-      <span className="stage-tab__glyph-emoji">{g.emoji}</span>
-    </span>
+      <img className={`stage-tab__image stage-tab__image--${stageId}`} src={import.meta.env.BASE_URL +image.src} alt={image.alt} />
+    </div>
   )
 }
 
@@ -71,17 +76,22 @@ export default function App() {
       return
     }
     if (secondsLeft < prev && secondsLeft > 0 && secondsLeft <= URGENT_THRESHOLD) {
-      void unlockAudio()
-      playTick()
+      void (async () => {
+        await unlockAudio()
+        playTick()
+      })()
     }
     if (secondsLeft === 0 && prev === 1) {
-      void unlockAudio()
-      playTimeUp()
+      void (async () => {
+        await unlockAudio()
+        playTimeUp()
+      })()
     }
     prevSeconds.current = secondsLeft
   }, [isBarter, paused, secondsLeft])
 
   const startGame = useCallback(async () => {
+    primeAudioFromUserGesture()
     await unlockAudio()
     setDay(1)
     setStageIndex(0)
@@ -91,6 +101,7 @@ export default function App() {
   }, [])
 
   const nextStage = useCallback(async () => {
+    primeAudioFromUserGesture()
     await unlockAudio()
     if (stageIndex === 0) {
       setStageIndex(1)
@@ -124,6 +135,7 @@ export default function App() {
   }, [])
 
   const togglePause = useCallback(() => {
+    primeAudioFromUserGesture()
     void unlockAudio()
     setPaused((p) => !p)
   }, [])
@@ -212,14 +224,7 @@ export default function App() {
             {STAGES.map((s, i) => {
               const active = i === stageIndex
               return (
-                <div
-                  key={s.id}
-                  className={`stage-tab${active ? ' stage-tab--active' : ''}`}
-                  aria-current={active ? 'step' : undefined}
-                >
-                  <StageGlyph stageId={i} active={active} />
-                  <span className="stage-tab__label">{s.footer}</span>
-                </div>
+                <StageTab key={s.id} stageId={i} active={active} />
               )
             })}
           </div>

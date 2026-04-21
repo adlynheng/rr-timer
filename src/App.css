@@ -332,109 +332,60 @@
 
 /* —— Footer stages —— */
 .footer {
-  display: flex;
-  align-items: stretch;
-  justify-content: space-between;
-  gap: clamp(12px, 2vw, 24px);
-  padding: clamp(12px, 2vh, 18px) clamp(14px, 3vw, 28px) clamp(14px, 2.5vh, 22px);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  column-gap: clamp(12px, 2vw, 20px);
+  padding: clamp(14px, 2vh, 18px) clamp(14px, 3vw, 28px) clamp(28px, 2.5vh, 22px);
   background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.45));
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .footer__stages {
+  grid-column: 2;
+  justify-self: center;
   display: flex;
   align-items: flex-end;
-  gap: clamp(8px, 2vw, 20px);
-  flex: 1;
-  min-width: 0;
+  justify-content: center;
+  gap: clamp(10px, 2.5vw, 24px);
+  width: max-content;
+  max-width: 100%;
 }
 
 .stage-tab {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  flex: 1;
-  max-width: 200px;
-  opacity: 0.35;
-  transition: opacity 0.2s ease;
+  justify-content: center;
+  width: clamp(180px, 22vw, 300px);
+  opacity: 0.3;
+  filter: saturate(0.96);
+  transform-origin: center;
+  transition: opacity 0.2s ease, transform 0.2s ease, filter 0.2s ease;
 }
 
 .stage-tab--active {
   opacity: 1;
+  transform: scale(1.01);
+  filter: saturate(1);
 }
 
-.stage-tab__glyph {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: clamp(44px, 8vw, 58px);
-  height: clamp(44px, 8vw, 58px);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 2px solid rgba(255, 255, 255, 0.12);
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease,
-    background 0.2s ease;
+.stage-tab__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: clamp(56px, 7.5vw, 84px);
+  object-fit: contain;
 }
 
-.stage-tab__glyph-emoji {
-  font-size: clamp(1.35rem, 4.2vw, 1.85rem);
-  line-height: 1;
-  filter: saturate(0.85);
-}
 
-.stage-tab__glyph--active {
-  transform: scale(1.06);
-}
-
-.stage-tab__glyph[data-stage='0'].stage-tab__glyph--active {
-  background: rgba(57, 255, 141, 0.12);
-  border-color: rgba(57, 255, 141, 0.55);
-  box-shadow:
-    0 0 20px rgba(57, 255, 141, 0.35),
-    inset 0 0 12px rgba(57, 255, 141, 0.08);
-}
-
-.stage-tab__glyph[data-stage='1'].stage-tab__glyph--active {
-  background: rgba(77, 184, 255, 0.14);
-  border-color: rgba(77, 184, 255, 0.6);
-  box-shadow:
-    0 0 20px rgba(77, 184, 255, 0.35),
-    inset 0 0 12px rgba(77, 184, 255, 0.08);
-}
-
-.stage-tab__glyph[data-stage='2'].stage-tab__glyph--active {
-  background: rgba(255, 201, 61, 0.12);
-  border-color: rgba(255, 201, 61, 0.55);
-  box-shadow:
-    0 0 20px rgba(255, 201, 61, 0.32),
-    inset 0 0 12px rgba(255, 201, 61, 0.08);
-}
-
-.stage-tab--active .stage-tab__glyph-emoji {
-  filter: saturate(1.15) drop-shadow(0 0 6px rgba(255, 255, 255, 0.35));
-}
-
-.stage-tab__label {
-  font-size: clamp(9px, 1.5vw, 11px);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-align: center;
-  line-height: 1.15;
-  color: rgba(255, 255, 255, 0.5);
-  text-transform: uppercase;
-}
-
-.stage-tab--active .stage-tab__label {
-  color: #fff;
+.stage-tab__image--1 {
+  max-height: clamp(64px, 9vw, 108px);
 }
 
 .footer__next {
+  grid-column: 3;
+  justify-self: end;
   flex-shrink: 0;
-  align-self: center;
   width: clamp(52px, 10vw, 72px);
   height: clamp(52px, 10vw, 72px);
   display: flex;
@@ -487,5 +438,84 @@
   .footer {
     padding-top: 8px;
     padding-bottom: 10px;
+  }
+}
+
+/*
+ * Touch / iPad: large neon text-shadows bloom and muddy letterforms on Safari.
+ * Desktop (fine pointer + hover) keeps the stronger look.
+ */
+@media (hover: none), (pointer: coarse) {
+  .home__hat {
+    filter: drop-shadow(0 1px 2px rgba(255, 255, 255, 0.25));
+  }
+
+  .home__title {
+    text-shadow:
+      0 0 6px rgba(255, 107, 44, 0.45),
+      0 2px 0 #c94a1a;
+  }
+
+  .game__day {
+    text-shadow: none;
+  }
+
+  .game__headline--green {
+    text-shadow: 0 0 10px rgba(57, 255, 141, 0.35);
+  }
+
+  .game__headline--gold {
+    text-shadow: 0 0 10px rgba(255, 201, 61, 0.32);
+  }
+
+  .timer-block__value {
+    text-shadow:
+      0 0 10px rgba(77, 184, 255, 0.35),
+      0 1px 0 rgba(0, 0, 0, 0.35);
+  }
+
+  .stage-tab--active .stage-tab__image {
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.14));
+  }
+
+  @keyframes timer-flash {
+    0%,
+    100% {
+      color: #fff;
+      text-shadow:
+        0 0 8px rgba(255, 100, 100, 0.55),
+        0 0 16px rgba(255, 80, 80, 0.3);
+      transform: scale(1);
+    }
+    50% {
+      color: #ff8a8a;
+      text-shadow:
+        0 0 14px rgba(255, 120, 120, 0.65),
+        0 0 24px rgba(255, 60, 60, 0.35);
+      transform: scale(1.01);
+    }
+  }
+}
+
+/* iPadOS with pointer / trackpad can report hover: hover — soften on typical tablet widths */
+@media (hover: hover) and (pointer: fine) and (max-width: 1100px) and (max-height: 900px) {
+  .home__title {
+    text-shadow:
+      0 0 8px rgba(255, 107, 44, 0.5),
+      0 2px 0 #c94a1a;
+  }
+
+  .game__headline--green {
+    text-shadow: 0 0 12px rgba(57, 255, 141, 0.4);
+  }
+
+  .game__headline--gold {
+    text-shadow: 0 0 12px rgba(255, 201, 61, 0.38);
+  }
+
+  .timer-block__value {
+    text-shadow:
+      0 0 12px rgba(77, 184, 255, 0.4),
+      0 1px 0 rgba(0, 0, 0, 0.35);
   }
 }

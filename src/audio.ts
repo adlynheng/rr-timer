@@ -1,4 +1,5 @@
 let ctx: AudioContext | null = null
+let lifecycleHooked = false
 
 function getCtx(): AudioContext | null {
   if (typeof window === 'undefined') return null
@@ -8,15 +9,57 @@ function getCtx(): AudioContext | null {
   return ctx
 }
 
-/** Call after a user gesture so iOS Safari allows playback. */
-export async function unlockAudio(): Promise<void> {
+function hookAudioLifecycle(): void {
+  if (typeof document === 'undefined' || lifecycleHooked) return
+  lifecycleHooked = true
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return
+    const c = ctx
+    if (c?.state === 'suspended') void c.resume()
+  })
+  window.addEventListener('pageshow', () => {
+    const c = ctx
+    if (c?.state === 'suspended') void c.resume()
+  })
+}
+
+/**
+ * Call synchronously from pointer/touch handlers (before any `await`).
+ * iOS Safari/WKWebKit needs a real audio route opened from a user gesture; a
+ * near-silent buffer plus `resume()` keeps later timer-driven beeps working.
+ */
+export function primeAudioFromUserGesture(): void {
+  hookAudioLifecycle()
   const c = getCtx()
-  if (c?.state === 'suspended') await c.resume()
+  if (!c) return
+  void c.resume()
+
+  const buf = c.createBuffer(1, 8, c.sampleRate)
+  const ch = buf.getChannelData(0)
+  ch[0] = 0.0001
+  ch[1] = -0.0001
+  const src = c.createBufferSource()
+  src.buffer = buf
+  const g = c.createGain()
+  g.gain.value = 0.004
+  src.connect(g)
+  g.connect(c.destination)
+  const t = c.currentTime
+  src.start(t)
+  src.stop(t + 0.02)
+}
+
+/** Await after priming from a gesture, or before timer sounds. */
+export async function unlockAudio(): Promise<void> {
+  hookAudioLifecycle()
+  const c = getCtx()
+  if (!c) return
+  if (c.state === 'suspended') await c.resume()
 }
 
 function tone(freq: number, duration: number, gain = 0.12): void {
   const c = getCtx()
-  if (!c) return
+  if (!c || c.state !== 'running') return
   const t0 = c.currentTime
   const osc = c.createOscillator()
   const g = c.createGain()
@@ -45,6 +88,7 @@ function scheduleChime(
   type: OscillatorType,
   slideTo?: number,
 ): void {
+  if (c.state !== 'running') return
   const osc = c.createOscillator()
   const g = c.createGain()
   osc.type = type
@@ -66,7 +110,7 @@ function scheduleChime(
  */
 export function playTimeUp(): void {
   const c = getCtx()
-  if (!c) return
+  if (!c || c.state !== 'running') return
   const t0 = c.currentTime
   const lead: OscillatorType = 'triangle'
 
