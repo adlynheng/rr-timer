@@ -336,7 +336,7 @@
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   column-gap: clamp(12px, 2vw, 20px);
-  padding: clamp(28px, 2vh, 18px) clamp(14px, 3vw, 28px) clamp(28px, 2.5vh, 22px);
+  padding: clamp(14px, 2vh, 18px) clamp(14px, 3vw, 28px) clamp(28px, 2.5vh, 22px);
   background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.45));
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -375,6 +375,11 @@
   height: auto;
   max-height: clamp(56px, 7.5vw, 84px);
   object-fit: contain;
+}
+
+
+.stage-tab__image--1 {
+  max-height: clamp(64px, 9vw, 108px);
 }
 
 .footer__next {

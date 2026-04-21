@@ -13,7 +13,7 @@ const URGENT_THRESHOLD = 10
 
 const STAGE_TAB_IMAGES = [
   { src: '/1-money-and-move.png', alt: 'Stage 1 - Money and move' },
-  { src: '/2-buy and barter.png', alt: 'Stage 2 - Buy and barter' },
+  { src: '/2-buy-and-barter.png', alt: 'Stage 2 - Buy and barter' },
   { src: '/3-cook-and-counter.png', alt: 'Stage 3 - Cook and counter' },
 ]
 
@@ -31,7 +31,7 @@ function StageTab({
       data-stage={stageId}
       aria-current={active ? 'step' : undefined}
     >
-      <img className="stage-tab__image" src={image.src} alt={image.alt} />
+      <img className={`stage-tab__image stage-tab__image--${stageId}`} src={import.meta.env.BASE_URL +image.src} alt={image.alt} />
     </div>
   )
 }
