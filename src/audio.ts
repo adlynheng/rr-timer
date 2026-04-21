@@ -1,5 +1,23 @@
 let ctx: AudioContext | null = null
 let lifecycleHooked = false
+const RESUME_RETRY_DELAY_MS = 120
+
+async function ensureAudioRunning(c: AudioContext | null): Promise<void> {
+  if (!c || c.state === 'running') return
+  try {
+    await c.resume()
+  } catch {
+    // iOS may briefly fail resume during route/interruption changes.
+  }
+  await new Promise<void>((resolve) => {
+    window.setTimeout(resolve, RESUME_RETRY_DELAY_MS)
+  })
+  try {
+    await c.resume()
+  } catch {
+    // Ignore second failure; next user gesture/lifecycle event will retry.
+  }
+}
 
 function getCtx(): AudioContext | null {
   if (typeof window === 'undefined') return null
@@ -15,11 +33,11 @@ function hookAudioLifecycle(): void {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') return
     const c = ctx
-    if (c?.state === 'suspended') void c.resume()
+    void ensureAudioRunning(c)
   })
   window.addEventListener('pageshow', () => {
     const c = ctx
-    if (c?.state === 'suspended') void c.resume()
+    void ensureAudioRunning(c)
   })
 }
 
@@ -32,7 +50,7 @@ export function primeAudioFromUserGesture(): void {
   hookAudioLifecycle()
   const c = getCtx()
   if (!c) return
-  void c.resume()
+  void ensureAudioRunning(c)
 
   const buf = c.createBuffer(1, 8, c.sampleRate)
   const ch = buf.getChannelData(0)
@@ -53,8 +71,7 @@ export function primeAudioFromUserGesture(): void {
 export async function unlockAudio(): Promise<void> {
   hookAudioLifecycle()
   const c = getCtx()
-  if (!c) return
-  if (c.state === 'suspended') await c.resume()
+  await ensureAudioRunning(c)
 }
 
 function tone(freq: number, duration: number, gain = 0.12): void {
