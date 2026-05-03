@@ -20,19 +20,34 @@ const STAGE_TAB_IMAGES = [
 function StageTab({
   stageId,
   active,
+  stageLabel,
+  onSelect,
 }: {
   stageId: number
   active: boolean
+  stageLabel: string
+  onSelect: () => void
 }) {
   const image = STAGE_TAB_IMAGES[stageId]
+  const className =
+    `stage-tab stage-tab--selectable stage-tab--style-${stageId}${active ? ' stage-tab--active' : ''}`
+  const img = (
+    <img className={`stage-tab__image stage-tab__image--${stageId}`} src={import.meta.env.BASE_URL + image.src} alt="" />
+  )
+
   return (
-    <div
-      className={`stage-tab stage-tab--style-${stageId}${active ? ' stage-tab--active' : ''}`}
+    <button
+      type="button"
+      className={className}
       data-stage={stageId}
       aria-current={active ? 'step' : undefined}
+      aria-label={active ? `${stageLabel}, current stage` : `Go to ${stageLabel}`}
+      onClick={() => {
+        if (!active) onSelect()
+      }}
     >
-      <img className={`stage-tab__image stage-tab__image--${stageId}`} src={import.meta.env.BASE_URL +image.src} alt={image.alt} />
-    </div>
+      {img}
+    </button>
   )
 }
 
@@ -140,6 +155,26 @@ export default function App() {
     setPaused((p) => !p)
   }, [])
 
+  const goToStage = useCallback((targetIndex: number) => {
+    if (targetIndex === stageIndex) return
+    primeAudioFromUserGesture()
+    void unlockAudio()
+    setStageIndex(targetIndex)
+    if (targetIndex === 1) {
+      setSecondsLeft(BUY_SECONDS)
+      prevSeconds.current = BUY_SECONDS
+    }
+    setPaused(false)
+  }, [stageIndex])
+
+  const restartBarterTimer = useCallback(() => {
+    primeAudioFromUserGesture()
+    void unlockAudio()
+    setSecondsLeft(BUY_SECONDS)
+    setPaused(false)
+    prevSeconds.current = BUY_SECONDS
+  }, [])
+
   if (screen === 'home') {
     return (
       <div className="app">
@@ -188,6 +223,9 @@ export default function App() {
           <button type="button" className="timer-block__pause" onClick={togglePause}>
             {paused ? 'Resume' : 'Pause'}
           </button>
+          <button type="button" className="timer-block__restart" onClick={restartBarterTimer}>
+            Restart timer
+          </button>
         </div>
       </div>
     )
@@ -224,7 +262,13 @@ export default function App() {
             {STAGES.map((s, i) => {
               const active = i === stageIndex
               return (
-                <StageTab key={s.id} stageId={i} active={active} />
+                <StageTab
+                  key={s.id}
+                  stageId={i}
+                  active={active}
+                  stageLabel={s.short}
+                  onSelect={() => goToStage(i)}
+                />
               )
             })}
           </div>
